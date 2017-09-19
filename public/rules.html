@@ -1,0 +1,58 @@
+<HTML><head><style type="text/css">pre { white-space: pre-wrap; width: 100%; margin: 3em 1px; }</style></head><BODY><PRE>
+About the game:
+
+Chexxers is a game derived from a combination of checkers and chess. The pieces are taken from checkers. Each piece is like a coin, having a head and a tail. Each side gets the same number of checkers as chess pieces, so 16 on each side. There is also two pieces per side that represents the royal pair, which crowns two of the pieces.
+
+The movement rules are taken from chess. The non-royal pieces start out with pawn like movement, moving one square forward, except to attack or stack, which is a diagonal movement. Single stack royal pieces can attack or move one square in any direction. The other chess pieces are dynamically created by stacking the chips. The progression is derived from the relative value of chess pieces. Additional pieces may be stacked beyond the 4, but only acts as a queen.
+
+The relative value and the number of pieces stacked are shown below.
+Piece  Value Stack #
+Pawn   1     1
+Knight 3     2
+Bishop 3     2
+Rook   5     3
+Queen  9     4
+
+In the case of distinguishing bishop and knight, whichever side is up at the top of the stack is what decides if it is bishop (heads) or knight (tails).  The board is laid out as if using checkers pieces, each one having a heads or tails facing up alternately.  Like chess, the patterns for each opposite row should mirror each other.  That is the back rows should be mirror copies, the front rows should also mirror, but be offset from the back row. 
+
+Pieces can also by dynamically separated as well. The moving pieces follow the same rules. For example, if one piece is moved off the stack, it follows pawn rules, two pieces follow either bishop or knight and three pieces follow rook rules. The act of combining or separating is one move, after which the opponent make their move.
+
+Pawns also retain the ability to move two spaces for the first move.  The en passant rule is not followed, since there is no expectation that the pawns have gotten there one space at a time.  Pawn promotion is also not used for the same reason.
+
+Castling can be done for either royalty piece, as long as it and all of the pieces to the edge have not been moved. Then, all of the pieces to one side get stacked, creating a rook, and the royal piece is placed behind it. Note: this is the quickest way of creating a queen, since the next move the royal piece can stack on the rook. To castle, click the royal piece, then click the pawn two over from it (not crossing the other royal)
+
+Winning conditions:
+Both royalty pieces of one side need to be removed from the board.
+Check and check-mate rules from chess kick in when one royal is removed.
+
+The rest of the game is governed by chess rules. If the situation is ambiguous, the appropriate chess rule should be followed.
+
+
+
+Gameplay:
+
+The 'heads' side is shown by an X pattern in the background of the chip, suggesting the diagonal moves of a bishop. The 'tails' side is shown by a rectangular pattern in the background of the chip, suggesting the asymmetric movement of the knight.
+To move a piece, click on the piece, then click on the square to move it to.
+To unselect a piece, you need to click on the same square again.
+
+To split a stack, click on the stack, then click on the number of pieces to split (from top or left), then click on the square to move just those pices)
+
+The player's turn is shown by the Player # line being in bold. 
+
+A simple chat system is provided to ease communication, though note that nothing is saved, so refreshing will lose the chat information.
+
+A random handle is created for each user, though at this time, it is lost on refresh.
+
+
+Game Controls:
+
+Note that all buttons have alt text, so if you can hover over the button for a brief description.
+
+To undo a move, click the left triangle in the control group.
+To redo an undone move, click the right triangle in the control group.
+
+To go to the beginning of the game, click the double left triangle.
+To go to the last move played of the game, click the double right triangle.
+
+To view Player 1 at the bottom of the screen click the circular arrows at the right end.
+</PRE></BODY></HTML>

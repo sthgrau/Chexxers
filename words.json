@@ -1,0 +1,14 @@
+{"atoms" : [
+{"name" : "adjectives",
+"values" : [
+"alert", "alive", "amused", "better", "bored", "brainy", "brave", "bright", "busy", "calm", "clean", "clear", "clever", "cloudy", "clumsy", "crazy", "cute", "dark", "dizzy", "drab", "dull", "eager", "easy", "elated", "fair", "famous", "fancy", "fierce", "filthy", "fine", "frail", "funny", "gentle", "gifted", "good", "grumpy", "happy", "hungry", "hurt", "ill", "itchy", "jolly", "joyous", "kind", "lazy", "light", "lively", "lonely", "long", "lovely", "lucky", "misty", "modern", "muddy", "mushy", "nice", "nutty", "odd", "open", "plain", "poised", "poor", "proud", "quaint", "real", "rich", "scary", "shiny", "shy", "silly", "sleepy", "sore", "stormy", "super", "tame", "tender", "tense", "testy", "tired", "tough", "vast", "weary", "wicked", "wild", "witty", "wrong", "zany"
+]},
+{"name" : "animals",
+"values" : [
+"alligator", "ant", "antelope", "ape", "bat", "bear", "beaver", "bee", "beetle", "bird", "buffalo", "bug", "bunny", "camel", "canary", "cat", "chicken", "chimp", "coral", "cow", "coyote", "crab", "crane", "croc", "crow", "deer", "dog", "dolphin", "dove", "dragon", "duck", "eagle", "elk", "frog", "gazelle", "giraffe", "goat", "goose", "gorilla", "hamster", "hen", "hornet", "horse", "hyena", "jaguar", "jay", "kitten", "koala", "ladybug", "lamb", "lion", "lizard", "llama", "lobster", "macaw", "mammoth", "mole", "monkey", "monster", "moose", "moth", "mouse", "muskrat", "mutt", "newt", "octopus", "ostrich", "otter", "owl", "parrot", "peacock", "penguin", "pigeon", "puppy", "quail", "quetzal", "rabbit", "raccoon", "robin", "rooster", "seagull", "seal", "shark", "sheep", "snail", "squid", "sponge", "squirrel", "swan", "tern", "tiger", "toad", "toucan", "turtle", "unicorn", "walrus", "wasp", "whale", "wolf", "yak", "zebra"
+]},
+{"name" : "colors",
+"values" : [
+"aqua", "black", "blue", "gray", "green", "lime", "maroon", "navy", "olive", "purple", "red", "silver", "teal", "white", "yellow", "Almond", "Amber", "Apricot", "Auburn", "Azure", "Beige", "Bisque", "Blond", "Blush", "Bone", "Brass", "Bronze", "Buff", "Canary", "Carmine", "Cherry", "Citrine", "Cobalt", "Coffee", "Copper", "Coral", "Cream", "Crimson", "Cyan", "Drab", "Ecru", "Emerald", "Fawn", "Feldgrau", "Fern", "Flax", "Fuchsia", "Ginger", "Gold", "Indigo", "Ivory", "Jade", "Jasmine", "Jasper", "Khaki", "Lemon", "Lilac", "Linen", "Magenta", "Mauve", "Mint", "Mustard", "Myrtle", "Ochre", "Olive", "Onyx", "Orange", "Peach", "Pearl", "Peridot", "Pink", "Plum", "Puce", "Purple", "Rose", "Ruby", "Ruddy", "Russet", "Rust", "Saffron", "Salmon", "Sand", "Scarlet", "Sepia", "Sienna", "Silver", "Straw", "Tan", "Taupe", "Tawny", "Teal", "Topaz", "Umber", "Violet", "Wine"
+]}
+]}
