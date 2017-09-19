@@ -70,12 +70,18 @@ class Screen {
         this.screenDraw();
         this.handle = "";
         if ( "WebSocket" in window) {
-            //set up websocket here, since this object uses it
-            if ( typeof(ReconnectingWebSocket) == "undefined" ) {
-                this.sock = new WebSocket("ws://" + document.URL.split("/")[2] + "/ws");
+            if ( document.URL.search("https") == 0 ) {
+                var wsProto = "wss://";
             }
             else {
-                this.sock = new ReconnectingWebSocket("ws://" + document.URL.split("/")[2] + "/ws");
+                var wsProto = "ws://";
+            }
+            //set up websocket here, since this object uses it
+            if ( typeof(ReconnectingWebSocket) == "undefined" ) {
+                this.sock = new WebSocket(wsProto + document.URL.split("/")[2] + "/ws");
+            }
+            else {
+                this.sock = new ReconnectingWebSocket(wsProto + document.URL.split("/")[2] + "/ws");
             }
     
             //set up event handler for incoming messages
