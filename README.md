@@ -1,3 +1,13 @@
+Chexxers is a game derived from a combination of traits from checkers and chess. The rules are currently in development. Any feedback is appreciated.
+
+A testing server: http://chex.2id.us
+/************************************/
+Server License
+Use of the server is licensed under the DontKillMyServer license.
+If you are killing my server, license to use is temporarily removed until such time as the killing stops
+/************************************/
+
+
 Credits
 
 Multiplayer gameplay inspired by https://github.com/Shoen/phaser_multiplayer_demo
