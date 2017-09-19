@@ -4,11 +4,11 @@ The frontend is javascript based using a websocket to talk to a golang backend. 
 
 A testing server: https://chex.2id.us
 
->/************************************/
->Server License
->Use of the server is licensed under the DontKillMyServer license.
->If you are killing my server, license to use is temporarily removed until such time as the killing stops
->/************************************/
+`/************************************/
+Server License
+Use of the server is licensed under the DontKillMyServer license.
+If you are killing my server, license to use is temporarily removed until such time as the killing stops
+/************************************/`
 
 
 Credits
