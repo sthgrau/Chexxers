@@ -27,6 +27,13 @@ class Screen {
         this.rules.target = "_blank";
         this.rules.innerHTML = "Rules";
         this.controls.appendChild(this.rules);
+        this.br2 = document.createElement('br');
+        this.controls.appendChild(this.br2);
+        this.thisGame = document.createElement('a');
+        this.thisGame.href = "/";
+        this.thisGame.target = "_blank";
+        this.thisGame.innerHTML = "This game (shareable link)";
+        this.controls.appendChild(this.thisGame);
         //Create server messages div
         this.messages = document.createElement('div');
         this.messages.id = "myMessages";
@@ -86,6 +93,8 @@ class Screen {
                     if ( this.lastMessageData.command == "move" ) {
                         var msgData = JSON.parse(this.lastMessageData.data);
                         that.pieces = msgData.pieces;
+                        console.log(this.lastMessageData);
+                        myScreen.thisGame.href = "?gameid=" + this.lastMessageData.gameid;
                         that.moveIndex = msgData.moveindex;
                         that.playerTurn = ( that.moveIndex ) % 2;
                         var playerColor = ( that.playerTurn ) ? "white" : "black";
