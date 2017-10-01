@@ -5,9 +5,13 @@ The frontend is javascript based using a websocket to talk to a golang backend. 
 A testing server: https://chex.2id.us
 
 `/************************************/
+
 Server License
+
 Use of the server is licensed under the DontKillMyServer license.
+
 If you are killing my server, license to use is temporarily removed until such time as the killing stops
+
 /************************************/`
 
 
@@ -19,3 +23,5 @@ Reconnecting websocket from https://github.com/joewalnes/reconnecting-websocket
 
 Board image courtesy of Deniela Di Lena : https://www.behance.net/gallery/10018309/Chess-Artwork-Pieces-and-Board-Art-Assets
 Chess pieces adapted from http://clipart-library.com/clipart/pcqrGKzLi.htm and http://www.jpkabala.com/funstuff.html
+
+Alert sound from https://freesound.org/people/RICHERlandTV/sounds/351545/

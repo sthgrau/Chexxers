@@ -4,6 +4,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"fmt"
 	"log"
 	"time"
 	"strings"
@@ -48,15 +49,18 @@ type Piece struct {
 }
 
 type Move struct {
-    MoveIndex  int     `json:"moveindex"`
-    Pieces     []Piece `json:"pieces"`
+    MoveIndex  int       `json:"moveindex"`
+    Pieces     []Piece   `json:"pieces"`
+    MoveTime   time.Time `json:"movetime"`
 }
 
 type Game struct {
     Moves          []Move    `json:"moves"`
+    PlayerCount    int       `json:"playercount"`
     Players        []Player  `json:"players"`
     GameId         string    `json:"gameid"`
     CurrMoveIndex  int       `json:"currmoveindex"`
+    LastMoveTime   time.Time `json:"lastmovetime"`
 }
 
 type JsonHandle struct {
@@ -92,10 +96,18 @@ func getHandle() string {
     Colors=HandleLists.Atoms[2].Words
   
     var MyHandle string
-    r := rand.New(rand.NewSource(time.Now().UnixNano()))
-    MyHandle += strings.Title(Adjectives[r.Intn(len(Adjectives))] )
-    MyHandle += strings.Title(Colors[r.Intn(len(Colors))] )
-    MyHandle += strings.Title(Animals[r.Intn(len(Animals))])
+    for MyHandle == "" {
+        r := rand.New(rand.NewSource(time.Now().UnixNano()))
+        MyHandle += strings.Title(Adjectives[r.Intn(len(Adjectives))] )
+        MyHandle += strings.Title(Colors[r.Intn(len(Colors))] )
+        MyHandle += strings.Title(Animals[r.Intn(len(Animals))])
+        for _, p := range Players {
+            if p.Handle == MyHandle {
+                MyHandle = ""
+                log.Println("That's numberwang!")
+            }
+        }
+    }
     log.Printf("My new name is %s\n", MyHandle)
     return MyHandle
 }
@@ -107,7 +119,10 @@ func NewGame(GameId string) Game {
     var startPos Move
     var startPoss []Move
     var playas []Player
+    var LastMoveTime time.Time
+    LastMoveTime = time.Now()
     startPos.MoveIndex = 0
+    startPos.MoveTime = LastMoveTime
     for i := 0; i < 32; i++ {
         var tp Piece
         tp.X = i % 8
@@ -130,7 +145,7 @@ func NewGame(GameId string) Game {
         startPos.Pieces = append(startPos.Pieces, tp)
     }
     startPoss = append(startPoss, startPos)
-    return Game{startPoss, playas, GameId, 0}
+    return Game{startPoss, len(playas), playas, GameId, 0, LastMoveTime }
 }
 /*
 func (p *Player) position(new bool) Message {
@@ -153,6 +168,32 @@ func (cmd *Cmd) getStuff(ttype string) string (
 var Games = make([]*Game, 0)
 
 var Players = make([]*Player, 0)
+
+func NewCmd(Command string, Data string, GameId string) Cmd {
+    return Cmd{Command, Data, GameId }
+}
+
+func sendMessage(grp1 []Player, grp2 []*Player, msg Cmd, exclude int ) {
+    for _, gp := range grp1 {
+        for _, p := range grp2 {
+            if exclude == 0 && p.Id == gp.Id {
+                p.Socket.WriteJSON(msg)
+            } else if exclude == 1 && p.Id != gp.Id {
+                p.Socket.WriteJSON(msg)
+            }
+        }
+    }
+}
+
+func stringifyJsonMarshal(blob interface{}) string {
+    jso, err := json.Marshal(blob)
+    if err != nil {
+        log.Printf("ERROR[sjm]: could not marshall %s",blob)
+        return ""
+    } else {
+        return string(jso)
+    }
+}
 
 func remoteHandler(res http.ResponseWriter, req *http.Request) {
 	var err error
@@ -177,17 +218,17 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
         Players = append(Players, player)
         
         var cmd Cmd
-        var rcmd *Cmd
-        var xxx []byte
+        var rcmd Cmd
         var thisGame Game
 
 	// we broadcast the position of the new player to alredy connected
 	// players (if any) and viceversa, we tell the player where to spawn already
 	// existing players
-        //player.Socket.WriteJSON(player)
         for {
-            //read message from client, if errors out, remove from list of Players
+            //read message from client
             xx, message, err := player.Socket.ReadMessage()
+
+            //if errors out, remove from list of Players
             if err != nil {
 		log.Println(err)
                 for i, p := range Players {
@@ -198,7 +239,18 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                                 } else {
                                     for j, gp := range thisGame.Players {
                                         if gp.Id == player.Id {
-                                            thisGame.Players = append(thisGame.Players[:j], thisGame.Players[j+1:]...)
+                                            if j < len(thisGame.Players) {
+                                                thisGame.Players = append(thisGame.Players[:j], thisGame.Players[j+1:]...)
+                                            } else {
+                                                thisGame.Players = thisGame.Players[:j]
+                                            }
+                                        }
+                                    }
+                                    //would be nice if I could count all slice elements with a field less than 2
+                                    thisGame.PlayerCount = 0
+                                    for _, gp := range thisGame.Players {
+                                        if gp.GamePlace <= 1 {
+                                            thisGame.PlayerCount += 1
                                         }
                                     }
                                     err = c.Update(bson.M{"gameid": player.GameId}, &thisGame)
@@ -206,6 +258,9 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                                         log.Printf("ERROR: could not update game in db")
                                     }
                                     //send appropriate player information to all remaining clients
+                                    rcmd = NewCmd("players", stringifyJsonMarshal(thisGame.Players), player.GameId)
+                                    sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
                                     rcmd = new(Cmd)
                                     rcmd.Command = "players"
                                     rcmd.GameId = player.GameId
@@ -218,13 +273,19 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                                             }
                                         }
                                     }
+*/
                                 }
-                                Players = append(Players[:i], Players[i+1:]...)
+                                if i < len(Players) {
+                                    Players = append(Players[:i], Players[i+1:]...)
+                                } else {
+                                    Players = Players[:i]
+                                }
                         }
                 }
                 break
 
             }
+            //unmarshal client message
             err = json.Unmarshal(message, &cmd)
             if err != nil {
 		log.Println(err)
@@ -248,14 +309,50 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                         player.Handle = getHandle();
                     }
                 }
+                //remove from old game
+                if player.GameId != "" && player.GameId != cmd.GameId {
+                    err = c.Find(bson.M{"gameid": player.GameId}).One(&thisGame)
+                    if err != nil {
+                        log.Printf("db find error: %s",err.Error)
+                    } else {
+                        for j, gp := range thisGame.Players {
+                            if gp.Id == player.Id {
+                                if j < len(thisGame.Players) {
+                                    thisGame.Players = append(thisGame.Players[:j], thisGame.Players[j+1:]...)
+                                } else {
+                                    thisGame.Players = thisGame.Players[:j]
+                                }
+                            }
+                        }
+                        thisGame.PlayerCount = 0
+                        for _, gp := range thisGame.Players {
+                            if gp.GamePlace <= 1 {
+                                thisGame.PlayerCount += 1
+                            }
+                        }
+                        err = c.Update(bson.M{"gameid": player.GameId}, &thisGame)
+                        if err != nil {
+                            log.Printf("ERROR [register]: could not update game in db when removing")
+                        }
+
+                        //this player has left the game, send update to other players
+                        rcmd = NewCmd("players", stringifyJsonMarshal(thisGame.Players), player.GameId)
+                        sendMessage(thisGame.Players, Players, rcmd, 0)
+                    }
+                }
                 //if gameid was not provided by client
                 //try to find provided handle in existing players, then remove the old player
+                //mainly useful for possible future cookie
                 if cmd.GameId == "" {
                     for j, p := range Players {
                         if p.Handle == player.Handle {
                             player.GameId = p.GameId
                             if p.Id != p.Id {
-                                Players = append(Players[:j], Players[j+1:]...)
+                                if j < len(Players) {
+                                    Players = append(Players[:j], Players[j+1:]...)
+                                } else {
+                                    Players = Players[:j]
+                                }
                             }
                         }
                     }
@@ -267,9 +364,10 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                     player.GameId = player.Id
                 }
                 //see if game exists in database
+                thisGame.GameId=""
                 err = c.Find(bson.M{"gameid": cmd.GameId}).One(&thisGame)
                 if err != nil {
-                    log.Printf("db find error: %s",err.Error)
+                    fmt.Printf("db find error: %s %s\n",err,len(thisGame.GameId))
                 }
                 //if it was found
                 var placesFound []int
@@ -287,7 +385,7 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                                 nPlayers = append(nPlayers, thisGame.Players[i])
                             }
                         }
-                        if gp.Id == player.Id && player.GamePlace >= 0 {
+                        if gp.Handle == player.Handle && player.GamePlace >= 0 {
                             myPlace = player.GamePlace
                         }
                     }
@@ -307,37 +405,59 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                     thisGame.Players = nPlayers
                     //add current player and update in database
                     thisGame.Players = append(thisGame.Players, *player)
+                    thisGame.LastMoveTime = time.Now()
+                    thisGame.PlayerCount = 0
+                    for _, gp := range thisGame.Players {
+                        if gp.GamePlace <= 1 {
+                            thisGame.PlayerCount += 1
+                        }
+                    }
                     err = c.Update(bson.M{"gameid": cmd.GameId}, &thisGame)
                     if err != nil {
-                        log.Printf("ERROR: could not update game in db")
+                        log.Printf("ERROR [register]: could not update game in db with updated players")
                     }
                 } else {
                     // create new game, add player and insert into database
-                    thisGame = NewGame(cmd.GameId)
+                    thisGame = NewGame(player.GameId)
                     player.GamePlace = 0
                     thisGame.Players = append(thisGame.Players, *player)
+                    thisGame.PlayerCount = 0
+                    for _, gp := range thisGame.Players {
+                        if gp.GamePlace <= 1 {
+                            thisGame.PlayerCount += 1
+                        }
+                    }
                     err = c.Insert(&thisGame)
                     if err != nil {
-                        log.Printf("ERROR: could not add game in db")
+                        fmt.Printf("ERROR: could not add game in db: %s\n",err)
                     }
                 }
                 //send updated info back to client
+                rcmd = NewCmd("register", stringifyJsonMarshal(player), player.GameId)
+/*
                 rcmd = new(Cmd)
                 rcmd.Command="register"
                 rcmd.GameId=player.GameId
                 xxx,_=json.Marshal(player)
                 rcmd.Data=string(xxx)
+*/
                 player.Socket.WriteJSON(rcmd)
 
                 //send appropriate piece information to client
+                rcmd = NewCmd("move", stringifyJsonMarshal(thisGame.Moves[thisGame.CurrMoveIndex]), player.GameId)
+/*
                 rcmd = new(Cmd)
                 rcmd.Command = "move"
                 rcmd.GameId = player.GameId
                 xxx,_= json.Marshal(thisGame.Moves[thisGame.CurrMoveIndex])
                 rcmd.Data = string(xxx)
+*/
                 player.Socket.WriteJSON(rcmd)
 
                 //send appropriate player information to all client
+                rcmd = NewCmd("players", stringifyJsonMarshal(thisGame.Players), player.GameId)
+                sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
                 rcmd = new(Cmd)
                 rcmd.Command = "players"
                 rcmd.GameId = player.GameId
@@ -350,6 +470,29 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                         }
                     }
                 }
+*/
+
+                //send information about other games to client
+                var ahs []interface{}
+                err = c.Find(bson.M{ "playercount": bson.M{"$gt": 0}}).Sort("-lastmovetime").Limit(5).Select(bson.M{"gameid": 1, "playercount": 1, "currmoveindex": 1}).All(&ahs)
+              //  err = c.Find(bson.M{ "gameid": bson.M{"$ne": thisGame.GameId}}).Sort("-lastmovetime").Limit(5).Select(bson.M{"gameid": 1, "playercount": 1, "currmoveindex": 1}).All(&ahs)
+                rcmd = NewCmd("games", stringifyJsonMarshal(ahs),"")
+                sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
+                var xxx []byte
+                xxx,_=json.Marshal(ahs)
+                rcmd = new(Cmd)
+                rcmd.Command="games"
+                rcmd.GameId=""
+                rcmd.Data=string(xxx)
+                for _, gp := range thisGame.Players {
+                    for _, p := range Players {
+                        if p.Id == gp.Id {
+                            p.Socket.WriteJSON(rcmd)
+                        }
+                    }
+                }
+*/
              //   player.Socket.WriteJSON(player)
             } else if cmd.Command == "backForWard" {
                 err = c.Find(bson.M{"gameid": cmd.GameId}).One(&thisGame)
@@ -367,11 +510,15 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                     } else if reqIndex == 2 {
                         thisGame.CurrMoveIndex = len(thisGame.Moves) - 1
                     }
+                    thisGame.LastMoveTime = time.Now()
                     err = c.Update(bson.M{"gameid": thisGame.GameId}, &thisGame)
                     if err != nil {
                         log.Printf("ERROR: could not update game in db")
                     }
                     _ = c.Find(bson.M{"gameid": cmd.GameId}).One(&thisGame)
+                    rcmd = NewCmd("move", stringifyJsonMarshal(thisGame.Moves[thisGame.CurrMoveIndex]), cmd.GameId)
+                    sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
                     var xxx []byte
                     xxx,_=json.Marshal(thisGame.Moves[thisGame.CurrMoveIndex])
                     rcmd := new(Cmd)
@@ -385,12 +532,33 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                             }
                         }
                     }
+*/
                 }
+            } else if cmd.Command == "games" {
+                var ahs []interface{}
+               // err = c.Find(bson.M{ "gameid": bson.M{"$ne": thisGame.GameId}}).Sort("-lastmovetime").Limit(5).Select(bson.M{"gameid": 1, "playercount": 1, "currmoveindex": 1}).All(&ahs)
+                err = c.Find(bson.M{ "playercount": bson.M{"$gt": 0}}).Sort("-lastmovetime").Limit(5).Select(bson.M{"gameid": 1, "playercount": 1, "currmoveindex": 1}).All(&ahs)
+                if err != nil {
+                    log.Printf("ERROR: could not find other games in db")
+                }
+                rcmd = NewCmd("games", stringifyJsonMarshal(ahs), "")
+/*
+                var xxx []byte
+                xxx,_=json.Marshal(ahs)
+                rcmd := new(Cmd)
+                rcmd.Command="games"
+                rcmd.GameId=""
+                rcmd.Data=string(xxx)
+*/
+                player.Socket.WriteJSON(rcmd)
             } else if cmd.Command == "msg" {
                 err = c.Find(bson.M{"gameid": cmd.GameId}).One(&thisGame)
                 if err != nil {
                     log.Printf("ERROR: could not find game in db")
                 }
+                rcmd = NewCmd("msg", string(player.Handle + " said: " + cmd.Data), cmd.GameId)
+                sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
                 rcmd := new(Cmd)
                 rcmd.Command="msg"
                 rcmd.GameId=cmd.GameId
@@ -402,23 +570,29 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                         }
                     }
                 }
+*/
             } else if cmd.Command == "move" {
                 move := Move{}
                 err = json.Unmarshal([]byte(cmd.Data), &move)
                 if err != nil {
-                    log.Printf("ERROR: could not unmarshall data in move command")
+                    log.Printf("ERROR[move]: could not unmarshall data in move command")
                 }
+                move.MoveTime = time.Now()
                 err = c.Find(bson.M{"gameid": cmd.GameId}).One(&thisGame)
                 if err != nil {
-                    log.Printf("ERROR: could not find game in db")
+                    log.Printf("ERROR[move]: could not find game in db")
                 }
                 thisGame.CurrMoveIndex = move.MoveIndex
                 thisGame.Moves = thisGame.Moves[:move.MoveIndex]
                 thisGame.Moves = append(thisGame.Moves, move)
+                thisGame.LastMoveTime = move.MoveTime
                 err = c.Update(bson.M{"gameid": thisGame.GameId}, &thisGame)
                 if err != nil {
                     log.Printf("ERROR: could not update game in db")
                 }
+                rcmd = NewCmd("move", stringifyJsonMarshal(move), cmd.GameId)
+                sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
                 rcmd := new(Cmd)
                 rcmd.Command="move"
                 rcmd.GameId=cmd.GameId
@@ -433,6 +607,29 @@ func remoteHandler(res http.ResponseWriter, req *http.Request) {
                         }
                     }
                 }
+*/
+                //send information about other games to client
+                var ahs []interface{}
+                err = c.Find(bson.M{ "playercount": bson.M{"$gt": 0}}).Sort("-lastmovetime").Limit(5).Select(bson.M{"gameid": 1, "playercount": 1, "currmoveindex": 1}).All(&ahs)
+              //  err = c.Find(bson.M{ "gameid": bson.M{"$ne": thisGame.GameId}}).Sort("-lastmovetime").Limit(5).Select(bson.M{"gameid": 1, "playercount": 1, "currmoveindex": 1}).All(&ahs)
+              //  var xxx []byte
+                rcmd = NewCmd("games", stringifyJsonMarshal(ahs), "")
+                sendMessage(thisGame.Players, Players, rcmd, 0)
+/*
+                xxx,_=json.Marshal(ahs)
+                rcmd = new(Cmd)
+                rcmd.Command="games"
+                rcmd.GameId=""
+                rcmd.Data=string(xxx)
+                for _, gp := range thisGame.Players {
+                    for _, p := range Players {
+                        if p.Id == gp.Id {
+                            p.Socket.WriteJSON(rcmd)
+                        }
+                    }
+                }
+*/
+                //send information about other games to client
             } else if cmd.Command == "hello" {
                 strB, _ := json.Marshal("hello back")
                 _ = player.Socket.WriteMessage(xx, strB)

@@ -10,66 +10,30 @@ class Screen {
         this.style.type = "text/css";
         this.style.id = "myStyle";
         document.head.appendChild(this.style);
-        //Create controls div
-        this.controls = document.createElement('div');
-        this.controls.id = "myControls";
-        this.controls.innerHTML = "<span class='control' title='go to beginning' onclick='control(-2);'>&#x23ea</<span>";
-        this.controls.innerHTML += "<span class='control' title='go back one move' onclick='control(-1);'>&#x25c0</span>";
-        this.controls.innerHTML += "<span class='control' title='refresh' onclick='control(0);'>&#x1f501</span>";
-        this.controls.innerHTML += "<span class='control' title='go forward one move' onclick='control(1);'>&#x25b6</span>";
-        this.controls.innerHTML += "<span class='control' title='go to end' onclick='control(2);'>&#x23e9</span>";
-        this.controls.innerHTML += "<span class='control' title='switch view' onclick='control(99);'>&#x1f504</span>";
-        document.body.appendChild(this.controls);
-        this.br = document.createElement('br');
-        this.controls.appendChild(this.br);
-        this.rules = document.createElement('a');
-        this.rules.href = "/rules.html";
-        this.rules.target = "_blank";
-        this.rules.innerHTML = "Rules";
-        this.controls.appendChild(this.rules);
-        this.br2 = document.createElement('br');
-        this.controls.appendChild(this.br2);
-        this.thisGame = document.createElement('a');
-        this.thisGame.href = "/";
-        this.thisGame.target = "_blank";
-        this.thisGame.innerHTML = "This game (shareable link)";
-        this.controls.appendChild(this.thisGame);
-        //Create server messages div
-        this.messages = document.createElement('div');
-        this.messages.id = "myMessages";
-        this.messages.innerHTML = "Welcome to Chexxers!";
-        this.controls.appendChild(this.messages);
-        //Create client messages 
-        this.chat = document.createElement('div');
-        this.chat.id = "myChat";
-        this.chats = document.createElement('div');
-        this.chats.id = "myChatBox";
-        this.chats.className = "chatBox";
-//        this.chatsp = document.createElement('pre');
-//        this.chatsp.innerHTML = "";
-//        this.chats.appendChild(this.chatsp);
-        this.chat.appendChild(this.chats);
-        this.chat.appendChild(document.createElement('br'));
-        this.chati = document.createElement('input');
-        this.chati.id = "myChatInput";
-        this.chat.appendChild(this.chati);
-        this.chatb = document.createElement('span');
-        this.chatb.id = "myChatButton";
-        this.chatb.innerHTML = "Submit";
-        this.chatb.onclick = function() { control(98); };
-        this.chati.onkeydown = function(e) { if (e.keyCode == 13 ) { control(98); } };
-        this.chat.appendChild(this.chatb);
-        this.controls.appendChild(this.chat);
+
+        this.mc = document.getElementById("myControls");
+        this.mc.onclick = function(e) { if ( document.getElementById("myDropdown").classList.contains('show') && e.target.id !== 'atbtn' && e.target.id !== 'gameIdEntry' && e.target.parentElement.id !== 'myDropdown' ) {
+                                    console.log("hiding ",e);
+                                    document.getElementById("myDropdown").classList.toggle("show");
+                                }};
+        this.ogamesc = document.getElementById("myDropdown");
+        this.ngame = document.getElementById("gameIdEntry");
+        this.chats = document.getElementById("myChatBox");
+        this.messages = document.getElementById("myMessages");
         //Create Canvas
         this.canvas = document.createElement('canvas');
         this.canvas.id = "myCanvas";
-        document.body.appendChild(this.canvas);
+        document.getElementById("allDiv").appendChild(this.canvas);
         this.context = this.canvas.getContext('2d');
         //Create Board
-        this.board = new Board(this.canvas);
-        this.screenDraw();
         this.handle = "";
-        if ( "WebSocket" in window) {
+        this.beeped = 0;
+        this.board = new Board(this);
+        this.screenDraw();
+    }
+    doWebSocket() {
+        var self=this;
+        if ( self.sock === undefined && "WebSocket" in window) {
             if ( document.URL.search("https") == 0 ) {
                 var wsProto = "wss://";
             }
@@ -86,39 +50,48 @@ class Screen {
     
             //set up event handler for incoming messages
             this.sock.onopen = function(e) {
-                var that = myScreen
-                var cmd = { "command": "register", "data": JSON.stringify({"handle": that.handle}), "gameid": that.board.gameid }
-                console.log("opening websocket ", cmd);
-                myScreen.sendJsonWS(JSON.stringify(cmd));
+                var cmd = { "command": "register", "data": JSON.stringify({"handle": self.handle}), "gameid": self.board.gameid }
+                consolelog("opening websocket ", cmd);
+                self.sendJsonWS(JSON.stringify(cmd));
             }
             this.sock.onmessage = function(message) {
-                var that = myScreen.board
                 this.lastMessageData = JSON.parse(message.data);
                 if ( this.lastMessageData.command ) {
                     //parse move data
                     if ( this.lastMessageData.command == "move" ) {
                         var msgData = JSON.parse(this.lastMessageData.data);
-                        that.pieces = msgData.pieces;
-                        console.log(this.lastMessageData);
-                        myScreen.thisGame.href = "?gameid=" + this.lastMessageData.gameid;
-                        that.moveIndex = msgData.moveindex;
-                        that.playerTurn = ( that.moveIndex ) % 2;
-                        var playerColor = ( that.playerTurn ) ? "white" : "black";
-                        that.draw();
-                        myScreen.tstyle.innerText = "span#p" + that.playerTurn + " { font-weight: bold; }";
-                      //  myScreen.messages.innerHTML = "Player " + ( that.playerTurn + 1 ) + "'s turn (" + playerColor + ")";
+                        self.board.pieces = msgData.pieces;
+                        consolelog("this.lastMessageData=",this.lastMessageData);
+                        self.board.moveIndex = msgData.moveindex;
+                        self.board.playerTurn = ( self.board.moveIndex ) % 2;
+                        var playerColor = ( self.board.playerTurn ) ? "white" : "black";
+                        self.board.draw();
+                        self.tstyle.innerText = "span#p" + self.board.playerTurn + " { font-weight: bold; }";
+                        consolelog("your turn?", self.board.iam, self.board.playerTurn);
+                        if ( self.board.iam == self.board.playerTurn && ! self.beeped ) {
+                            consolelog("your turn ", self.beeped);
+                          //  document.getElementById("beep").play();
+                            //document.getElementById("beepButton").click();
+                            playAudio();
+                            //play("sound/beep.mp3").then(function() { consolelog("Done!"); });
+                            self.beeped = 1;
+                        }
+                        else {
+                            self.beeped = 0;
+                        }
+                      //  self.messages.innerHTML = "Player " + ( self.board.playerTurn + 1 ) + "'s turn (" + playerColor + ")";
                     }
                     else if ( this.lastMessageData.command == "msg" ) {
                         var msgData = this.lastMessageData.data;
                         var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + msgData + "</span><BR>";
-                      //  myScreen.chatsp.innerHTML += msgData + "\n";
-                        myScreen.chats.innerHTML += mymsg;
-                      //  myScreen.chats.scrollTop = myScreen.chats.scrollHeight;
+                      //  self.chatsp.innerHTML += msgData + "\n";
+                        self.chats.innerHTML += mymsg;
+                        self.chats.scrollTop = self.chats.scrollHeight;
                     }
                     else if ( this.lastMessageData.command == "players" ) {
                         var msgData = this.lastMessageData.data;
                         var playas = JSON.parse(msgData);
-                        console.log("Player update: ", playas);
+                        consolelog("Player update: ", playas);
                         var p0d = "";
                         var p1d = "";
                         var player0 = playas.filter(function (el) {
@@ -127,51 +100,89 @@ class Screen {
                         var player1 = playas.filter(function (el) {
                             return ( el.GamePlace === 1);
                         });
-                        var oplayer0 = myScreen.board.players.filter(function (el) {
+                        var oplayer0 = self.board.players.filter(function (el) {
                             return ( el.GamePlace === 0);
                         });
-                        var oplayer1 = myScreen.board.players.filter(function (el) {
+                        var oplayer1 = self.board.players.filter(function (el) {
                             return ( el.GamePlace === 1);
                         });
                         if ( player0.length > 0 ) {
                             p0d = player0[0].Handle; 
-                            if ( player0[0].Handle == myScreen.handle ) {
+                            if ( player0[0].Handle == self.handle ) {
                                 p0d = player0[0].Handle + " (you)"
-                                myScreen.board.reverse=1;
-                                myScreen.board.iam=0;
-                                myScreen.board.draw();
+                                self.board.reverse=1;
+                                self.board.iam=0;
+                                self.board.draw();
                             }
-                            if ( oplayer0.length == 0 && player0[0].Handle != myScreen.handle ) {
+                            if ( oplayer0.length == 0 && player0[0].Handle != self.handle ) {
                                 var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + player0[0].Handle + " has joined the game</span><BR>";
-                                myScreen.chats.innerHTML += mymsg;
+                                self.chats.innerHTML += mymsg;
                             }
                         }
                         else if ( oplayer0.length > 0 ) {
                             var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + oplayer0[0].Handle + " has left the game</span><BR>";
-                            myScreen.chats.innerHTML += mymsg;
+                            self.chats.innerHTML += mymsg;
                         }
                         if ( player1.length > 0 ) {
                             p1d = player1[0].Handle;
-                            if (player1[0].Handle == myScreen.handle ) {
-                                myScreen.board.iam=1;
+                            if (player1[0].Handle == self.handle ) {
+                                self.board.reverse=0;
+                                self.board.iam=1;
                                 p1d += " (you)";
+                                self.board.draw();
                             }
-                            if ( oplayer1.length == 0 && player1[0].Handle != myScreen.handle ) {
+                            if ( oplayer1.length == 0 && player1[0].Handle != self.handle ) {
                                 var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + player1[0].Handle + " has joined the game</span><BR>";
-                                myScreen.chats.innerHTML += mymsg;
+                                self.chats.innerHTML += mymsg;
                             }
                         }
                         else if ( oplayer1.length > 0 ) {
                             var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + oplayer1[0].Handle + " has left the game</span><BR>";
-                            myScreen.chats.innerHTML += mymsg;
+                            self.chats.innerHTML += mymsg;
                         }
-                        myScreen.messages.innerHTML = "<span id='p0'>Player 0 " + p0d + "</span><br><span id='p1'>Player 1 " + p1d + "</span>";
-                        myScreen.board.players = playas;
+                        document.getElementById('p0').innerHTML = "Player 0 " + p0d;
+                        document.getElementById('p1').innerHTML = "Player 1 " + p1d;
+                       // self.messages.innerHTML = "<span id='p0'>Player 0 " + p0d + "</span><br><span id='p1'>Player 1 " + p1d + "</span>";
+                        self.board.players = playas;
                     }
                     else if ( this.lastMessageData.command == "register" ) {
                         var msgData = this.lastMessageData.data;
-                        myScreen.handle = JSON.parse(msgData).Handle;
-                        myScreen.board.gameid = this.lastMessageData.gameid;
+                        consolelog(this.lastMessageData);
+                        consolelog(msgData);
+                        self.handle = JSON.parse(msgData).Handle;
+                        self.board.iam = JSON.parse(msgData).GamePlace;
+                        self.ngame.value = this.lastMessageData.gameid;
+                        self.board.gameid = this.lastMessageData.gameid;
+                    }
+                    else if ( this.lastMessageData.command == "games" ) {
+                        var msgData = this.lastMessageData.data;
+                        consolelog(msgData);
+                        var ogames = JSON.parse(msgData);
+                        consolelog(ogames);
+                        var gamesList = self.ogamesc;
+                        for ( var g=gamesList.children.length - 1; g >= 0; g-- ) {
+                            if ( gamesList.children[g].tagName === "A" ) {
+                                gamesList.children[g].remove();
+                            }
+                        }
+                        for ( var i=0; i < ogames.length; i++ ) {
+                            if ( ogames[i].gameid != "" && ogames[i].gameid != self.board.gameid ) {
+                                var link = document.createElement("a");
+                                link.href="#";
+                                link.id=ogames[i].gameid;
+                                link.onclick= function(e) { self.board.gameid = e.target.id;
+                                    var cmd = { "command": "register", "data": JSON.stringify({"handle": self.handle}), "gameid": self.board.gameid }
+                                    self.sendJsonWS(JSON.stringify(cmd));
+                                    e.target.parentNode.classList.toggle("show");
+                                }
+                                link.innerText = ogames[i].gameid + " players:" + ogames[i].playercount + " moves:" + ogames[i].currmoveindex;
+                                gamesList.appendChild(link);
+                            }
+                        }
+                    }
+                    else {
+                        var msgData = this.lastMessageData.data;
+                        consolelog(msgData);
                     }
                 }
             }
@@ -180,7 +191,7 @@ class Screen {
           //  this.sock.addEventListener("close", e => {
                 if (this.readyState === 3) {
                   var url = "ws://" + document.URL.split("/")[2] + "/ws";
-                  console.log("reconnecting websocket");
+                  consolelog("reconnecting websocket");
                   setTimeout(function(){start(url)}, 5000);
                 }
            // });
@@ -189,11 +200,12 @@ class Screen {
         }
         else {
             this.messages.innerHTML = "This web browser does not support websockets. Multiplayer is not enabled";
-            console.log("This web browser does not support websockets. Multiplayer is not enabled");
+            consolelog("This web browser does not support websockets. Multiplayer is not enabled");
         }
     }
 
     sendJsonWS(json) {
+        console.log("sending ",json);
         this.sock.send(json);
     }
 
@@ -201,6 +213,7 @@ class Screen {
         //set some dimensions. Done after construction so resizing can be done
         this.screenW = window.innerWidth;
         this.screenH = window.innerHeight;
+        consolelog("w=",this.screenW, " h=",this.screenH);
         if (this.screenH > this.screenW) {
             this.orientation = "portrait";
             this.longestDim = this.screenH;
@@ -211,34 +224,50 @@ class Screen {
             this.smallerDim = this.screenH;
             this.longestDim = this.screenW;
         }
+        document.getElementById('allDiv').height=this.screenH;
+        document.getElementById('allDiv').width=this.screenW;
+        consolelog("o=",this.orientation);
+        consolelog("s=",screen.orientation);
         this.squareSize = Math.floor(this.smallerDim / 8);
         this.BoardSize = this.squareSize * 8;
-        this.style.textContent = ".chatBox { border-style: dotted; border-color: blue; border-width: 2px; border-radius: 3px; height: auto; max-height: 300px; width: 400px; overflow-y: auto; bottom: 0; resize: both;} ";
         //set the canvas size one column extra for stacking control
         if (this.orientation == "landscape") {
             this.canvas.width = this.squareSize * 9;
             this.canvas.height = this.squareSize * 8;
             //TODO: work out why this needed to be adjusted
             this.controlsSize = this.screenW - this.canvas.width - 40;
+            var chatHeight = Math.floor(this.screenH * .65 );
+            console.log("chatHeight == ",chatHeight);
+            this.style.textContent = "div#myChatBox { max-height: " + chatHeight + "px; width: " + this.controlsSize + "px; } ";
             this.board.setDimensions(this.BoardSize, this.BoardSize, this.squareSize, 0);
-            this.style.textContent += "div#myControls { cursor: pointer; width: " + this.controlsSize + "px; " + 
+            this.style.textContent += "div#myControls { cursor: pointer; width: " + this.controlsSize + "px; height: 100%; " + 
                     "float: left; position: relative; z-index: 3} " + 
                 "canvas#myCanvas {float: right; display: table-cell; z-index: 1; position: relative} " + 
+                "div#allDiv { height: " + this.screenH + "px; } " + 
                 "span.control { font-size: " + Math.floor(this.controlsSize / 8 ) + "px; }";
         }
         else {
             this.canvas.width = this.squareSize * 8;
             this.canvas.height = this.squareSize * 9;
             this.controlsSize = this.screenH - this.canvas.height;
+            var chatHeight = Math.floor(this.controlsSize / 2.5 );
+            console.log("chatHeight == ",chatHeight);
+            this.style.textContent = "div#myChatBox { max-height: " + chatHeight + "px; width: " + ( this.screenW - 50 ) + "px; } ";
             this.board.setDimensions(this.BoardSize, this.BoardSize, 0, this.squareSize);
             this.style.textContent += "div#myControls { cursor: pointer; height: " + this.controlsSize + "px; " + 
                     "float: top; position: relative; z-index: 3} " + 
                 "canvas#myCanvas {float: bottom; display: table-cell; z-index: 1; position: relative} " + 
+                "div#allDiv { width: " + this.screenW + "px; } " + 
                 "span.control { font-size: " + Math.floor(this.controlsSize / 6 ) + "px; }";
         }
 
         // the following actually paints the board
-        this.board.callPro()
+        if ( this.sock === undefined ) {
+            this.board.callPro()
+        }
+        else {
+            this.board.draw();
+        }
 
         //some global variables
         this.clickPos;
@@ -251,9 +280,12 @@ class Screen {
 }
 
 class Board {
-    constructor(canvas) {
+    constructor(screen) {
+        consolelog("board is ");
+        consolelog(this);
         //initialize Board variables
-        this.canvas = canvas;
+        this.screen = screen;
+        this.canvas = screen.canvas;
         if ( this.canvas.width > this.canvas.height ) {
             this.orientation = "landscape";
         }
@@ -285,12 +317,14 @@ class Board {
     callPro() {
         //load images, wait for them to load, then kick off function to use them
         let p1 = new Promise((resolve, reject) => {
-            console.log("let p1's be p1's");
+            consolelog("let p1's be p1's");
             this.pieceImg = new Image();
             this.pieceImg.src = "images/chexpieces.png";
             this.pieceImg.onload = function () {
                 resolve(this);
             };
+        })
+        let p2 = new Promise((resolve, reject) => {
             this.boardImg = new Image();
             this.boardImg.src = "images/Chess_Board.png";
             this.boardImg.onload = function () {
@@ -298,20 +332,20 @@ class Board {
             };
         })
 
-        p1.then((value) => {
-            console.log("apres p1");
+        Promise.all([p1,p2]).then((value) => {
+            consolelog("apres p1");
             //after promise returns
             this.afterPro(value)
         }).catch((reason) => {
-            console.log('Handle rejected promise (' + reason + ') here.');
+            consolelog('Handle rejected promise (' + reason + ') here.');
         })
     }
 
     afterPro(value) {
-        console.log("icons?");
+        consolelog("icons?");
         //load icon images and board image
         if ( ! this.icons ) { 
-            console.log("icons");
+            consolelog("icons");
             this.icons = document.createElement('canvas');
             this.icons.height = this.pieceImg.naturalHeight;
             this.icons.width = this.pieceImg.naturalWidth;
@@ -326,18 +360,19 @@ class Board {
            // this.paintPlayer(this.iconsContext, 0);
            // this.paintPlayer(this.iconsContext, 1);
         }
-        if ( ! this.board ) {
-            this.board = document.createElement('canvas');
-            this.board.height = this.boardImg.naturalHeight;
-            this.board.width = this.boardImg.naturalWidth;
+        if ( ! this.boardImg ) {
+            this.boardImg = document.createElement('canvas');
+            this.boardImg.height = this.boardImg.naturalHeight;
+            this.boardImg.width = this.boardImg.naturalWidth;
 
-            this.board.id = "boardCanvas";
-            this.board.display = "none";
-            this.boardContext = this.board.getContext('2d');
+            this.boardImg.id = "boardCanvas";
+            this.boardImg.display = "none";
+            this.boardContext = this.boardImg.getContext('2d');
 
             this.boardContext.drawImage(this.boardImg, 0, 0);
         }
         this.draw();
+        this.screen.doWebSocket();
     }
 
     selectSquare(x, y, z) {
@@ -517,17 +552,17 @@ class Board {
             //other players will receive the move from the server
             this.moveIndex += 1
             var cmd = { "command": "move", "data": JSON.stringify({ "moveindex": this.moveIndex, "pieces": this.pieces }), "gameid": this.gameid }
-            myScreen.sendJsonWS(JSON.stringify(cmd));
+            this.screen.sendJsonWS(JSON.stringify(cmd));
             //clear the selection
             this.selectedX = -1;
             this.selectedY = -1;
             this.selectedZ = -1;
             this.playerTurn = ( this.moveIndex ) % 2;
-            myScreen.tstyle.innerText = "span#p" + this.playerTurn + " { font-weight: bold; }";
+            this.screen.tstyle.innerText = "span#p" + this.playerTurn + " { font-weight: bold; }";
            // var playerColor = ( this.playerTurn ) ? "blue" : "red";
-          //  myScreen.messages.innerHTML = "Player " + ( this.playerTurn + 1 ) + "'s turn (" + playerColor + ")";
+          //  this.screen.messages.innerHTML = "Player " + ( this.playerTurn + 1 ) + "'s turn (" + playerColor + ")";
         }
-        console.log("Selected a square ", action, ' ', this.selectedX, this.selectedY, this.selectedZ);
+        consolelog("Selected a square ", action, ' ', this.selectedX, this.selectedY, this.selectedZ);
     }
 
     setDimensions(h, w, x, y) {
@@ -763,7 +798,7 @@ function doMouseClick(thisObj,startPos,endPos,startTime,endTime) {
         else {
             zcho = maxZ - Math.floor(startPos.x / thisBoard.swidth );
         }
-        myScreen.board.selectedZ = zcho;
+        thisBoard.selectedZ = zcho;
     }
     if ( ( endTime - startTime ) > 1 ) {
         //long click
@@ -786,6 +821,10 @@ function control(dir) {
         myScreen.sendJsonWS(JSON.stringify(cmd));
         msga.value = "";
     }
+    else if ( dir == 97 ) {
+        cmd = { "command": "register", "data": JSON.stringify({"handle": myScreen.handle}), "gameid": myScreen.board.gameid }
+        myScreen.sendJsonWS(JSON.stringify(cmd));
+    }
     else {
         dir=dir + ""
         var cmd = { "command": "backForWard", "data": dir, "gameid": myScreen.board.gameid }
@@ -793,11 +832,31 @@ function control(dir) {
     }
 }
 
+function play(url) {
+  return new Promise(function(resolve, reject) { // return a promise
+    var audio = new Audio();                     // create audio wo/ src
+    audio.preload = "auto";                      // intend to play through
+    audio.autoplay = true;                       // autoplay when loaded
+    audio.onerror = reject;                      // on error, reject
+    audio.onended = resolve;                     // when done, resolve
+
+    audio.src = url
+  });
+}
+
+function consolelog() {
+    var myts = Date().split(" ")[4] + " " + Date().split(" ")[2] + " " + Date().split(" ")[1];
+    console.log(myts, arguments);
+}
+
 //do everything
 var myScreen = new Screen();
 
 //add even listeners for canvas mouse activities
 myScreen.canvas.addEventListener('mousedown', function(evt) {
+    if ( document.getElementById("myDropdown").classList.contains('show') ) {
+        document.getElementById("myDropdown").classList.toggle("show");
+    };
     this.clickPos = getMousePos( evt);
     this.clickTime = new Date()/1000;
 })
@@ -809,9 +868,31 @@ myScreen.canvas.addEventListener('mouseup', function(evt) {
 })
 
 //add event function to redraw the screen on resize
-window.onresize=function() {myScreen.screenDraw();};
+if ( window.orientation === undefined ) {
+    window.onresize=function() {myScreen.screenDraw();};
+}
+/*
+else {
+    window.onresize=function() { consolelog("mobile resize"); if ( screen.orientation.type.search(myScreen.orientation) >= 0 ) { consolelog("mobile non-keyboard resize"); myScreen.screenDraw();}; };
+}
+*/
+
+function orientationChanged() {
+  const timeout = 120;
+  return new window.Promise(function(resolve) {
+    const go = (i, height0) => {
+      window.innerHeight != height0 || i >= timeout ?
+        resolve() :
+        window.requestAnimationFrame(() => go(i + 1, height0));
+    };
+    go(0, window.innerHeight);
+  });
+}
 
 //add event function to redraw the screen on reorientation
 screen.orientation.onchange=function() {
-    myScreen.screenDraw();
+    consolelog("turnt");
+    orientationChanged().then( function () { 
+        myScreen.screenDraw();
+    });
 };

@@ -3,11 +3,86 @@
 
 <head>
     <title>Chexxers Multiplayer</title>
-    <style>
-    </style>
+    <link rel="stylesheet" href="controls.css">
 </head>
 
 <body>
+<div id="allDiv">
+<div id="myControls">
+    <button class="control" onclick="control(-2)">|&lt;&lt;</button>
+    <button class="control" onclick="control(-1)">&lt;</button>
+    <button class="control" onclick="control(1)">&gt;</button>
+    <button class="control" onclick="control(2)">&gt;&gt;|</button>
+    <div id="otherGames" class="dropdown">
+        <button id="atbtn" class="control" onclick="showGames()">&nbsp;@ </button>
+        <div id="myDropdown" class="dropdown-content">
+            This game: <input id="gameIdEntry" onkeypress="gameEnter()">
+        </div>
+    </div>
+    <button class="control" onclick="document.getElementById('help').style.display='block'">?</button>
+  <!--
+    <span class="control" title="go to beginning" onclick="control(-2);">&#x23ea;</span>
+    <span class="control" title="go back one move" onclick="control(-1);">&#x25c0;</span>
+    <span class="control" title="go forward one move" onclick="control(1);">&#x25b6;</span>
+    <span class="control" title="go to end" onclick="control(2);">&#x23e9;</span>
+    <br>
+    <a href="/rules.html" target="_blank">Rules</a>
+  -->
+    <br>
+  <!--
+    <div id="otherGames" class="dropdown">
+        <button class="dropbtn" onclick="showGames()">Other matches</button>
+        <div id="myDropdown" class="dropdown-content">
+        </div>
+    </div>
+    <input id="gameIdEntry" onkeypress="gameEnter()">
+  -->
+    <span id="p0"></span>
+    <br>
+    <span id="p1"></span>
+    <div id="myChat">
+        <div id="myChatBox" class="chatBox"></div>
+        <br>
+        <input id="myChatInput" onkeypress="chatEnter();">
+        <span id="myChatButton" onclick="control(98);">Submit</span>
+    </div>
+</div>
+</div>
+<div id="helpdiv" style="background-color: #ffffff; z-index: 9;">
+    <iframe id="help" src="/rules.html" onload="iframeclick()" width="100%" height="100%" scrolling="auto" style="background-color: #F0F0F0;" allowTransparency="false"></iframe>
+</div>
+<audio id="beep"><source src="sound/beep.mp3" type"audio/mpeg">You suck</audio>
+<button onclick="playAudio()" type="button" id="beepButton" style="display: none">asdfasdf</button>
+<script>
+    function iframeclick() {
+        document.getElementById("help").contentWindow.document.body.onclick = function() {
+            document.getElementById("help").style.display="none";
+        }
+    }
+
+    function showGames() {
+        document.getElementById('myDropdown').classList.toggle('show');
+    }
+    function gameEnter(e) {
+        if (event.keyCode == 13 ) {
+            myScreen.board.gameid = event.target.value;
+            myScreen.board.draw();
+            event.target.parentNode.classList.toggle("show");
+            control(97);
+            return false;
+        }
+    }
+    function chatEnter() {
+        if (event.keyCode == 13 ) {
+            control(98);
+        }
+    }
+    var x = document.getElementById("beep"); 
+
+    function playAudio() { 
+        x.play(); 
+    } 
+</script>
 <script src="reconnecting-websocket.min.js"></script>
 <script src="chex.js">     
     </script>
