@@ -2,10 +2,11 @@
 <html>
 <head>
 <meta content="text/html; charset=UTF-8" http-equiv="content-type">
-<style type="text/css">ol{margin:0;padding:0}table td,table th{padding:0}.c0{color:#000000;font-weight:400;text-decoration:none;vertical-align:baseline;font-size:11pt;font-family:"Arial";font-style:normal}.c1{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:left}.c3{background-color:#ffffff;max-width:468pt;padding:72pt 72pt 72pt 72pt}.c2{height:11pt}.title{padding-top:0pt;color:#000000;font-size:26pt;padding-bottom:3pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}.subtitle{padding-top:0pt;color:#666666;font-size:15pt;padding-bottom:16pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}li{color:#000000;font-size:11pt;font-family:"Arial"}p{margin:0;color:#000000;font-size:11pt;font-family:"Arial"}h1{padding-top:20pt;color:#000000;font-size:20pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h2{padding-top:18pt;color:#000000;font-size:16pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h3{padding-top:16pt;color:#434343;font-size:14pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h4{padding-top:14pt;color:#666666;font-size:12pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h5{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h6{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;font-style:italic;orphans:2;widows:2;text-align:left}
+<style type="text/css">div.json{padding-left: 30px;}ol{margin:0;padding:0}table td,table th{padding:0}.c0{color:#000000;font-weight:400;text-decoration:none;vertical-align:baseline;font-size:11pt;font-family:"Arial";font-style:normal}.c1{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:left}.c3{background-color:#ffffff;max-width:468pt;padding:72pt 72pt 72pt 72pt}.c2{height:11pt}.title{padding-top:0pt;color:#000000;font-size:26pt;padding-bottom:3pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}.subtitle{padding-top:0pt;color:#666666;font-size:15pt;padding-bottom:16pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}li{color:#000000;font-size:11pt;font-family:"Arial"}p{margin:0;color:#000000;font-size:11pt;font-family:"Arial"}h1{padding-top:20pt;color:#000000;font-size:20pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h2{padding-top:18pt;color:#000000;font-size:16pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h3{padding-top:16pt;color:#434343;font-size:14pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h4{padding-top:14pt;color:#666666;font-size:12pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h5{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h6{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;font-style:italic;orphans:2;widows:2;text-align:left}
 </style>
 </head>
 <body class="c3">
+<h1>Chexxers API</h1>
 <p class="c1">
 <span class="c0">This document describes the client server communication API for the Chexxers game.
 </span>
@@ -27,24 +28,20 @@
 </span>
 </p>
 <p class="c1">
-<span class="c0">{
-</span>
+<div class="json">
+{
+</p>
+&quot;command&quot;:&quot;register&quot;,
 </p>
 <p class="c1">
-<span class="c0">&quot;command&quot;:&quot;register&quot;,
-</span>
+&quot;data&quot;:&quot;&quot;,
 </p>
 <p class="c1">
-<span class="c0">&quot;data&quot;:&quot;&quot;,
-</span>
+&quot;gameid&quot;:&quot;&quot;
 </p>
 <p class="c1">
-<span class="c0">&quot;gameid&quot;:&quot;&quot;
-</span>
-</p>
-<p class="c1">
-<span class="c0">}
-</span>
+}
+</div>
 </p>
 <p class="c1">
 <span class="c0">command: Must contain a string for any communication. This value determines the structure the data must have.
@@ -63,11 +60,11 @@
 </span>
 </p>
 <p class="c1">
-<span class="c0">Commands:
+<span class="c0"><h1>Commands:</h1>
 </span>
 </p>
 <p class="c1">
-<span class="c0">Register
+<span class="c0"><h2>Register</h2>
 </span>
 </p>
 <p class="c1">
@@ -75,6 +72,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -93,6 +91,7 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">&nbsp;
@@ -111,6 +110,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -129,6 +129,7 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">&nbsp;
@@ -139,6 +140,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -157,6 +159,7 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">After the register, the server sends out a separate move message to draw the board. It will also send a players message to update the clients with an updated players list.
@@ -167,7 +170,7 @@
 </span>
 </p>
 <p class="c1">
-<span class="c0">Games
+<span class="c0"><h2>Games</h2>
 </span>
 </p>
 <p class="c1">
@@ -175,6 +178,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -193,12 +197,14 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">The reply message will have a stringified JSON array of game data.
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -217,13 +223,14 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">&nbsp;
 </span>
 </p>
 <p class="c1">
-<span class="c0">Players
+<span class="c0"><h2>Players</h2>
 </span>
 </p>
 <p class="c1">
@@ -231,6 +238,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -249,13 +257,14 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">&nbsp;
 </span>
 </p>
 <p class="c1">
-<span class="c0">Msg
+<span class="c0"><h2>Msg</h2>
 </span>
 </p>
 <p class="c1">
@@ -263,6 +272,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -281,6 +291,7 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">Messages from other players will appear the same way. Gameid is required as it is used to determine who to send messages to.
@@ -291,7 +302,7 @@
 </span>
 </p>
 <p class="c1">
-<span class="c0">BackForWard
+<span class="c0"><h2>BackForWard</h2>
 </span>
 </p>
 <p class="c1">
@@ -319,6 +330,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -337,6 +349,7 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">The server replies with a move command for clients to redraw the board.
@@ -347,7 +360,7 @@
 </span>
 </p>
 <p class="c1">
-<span class="c0">Move
+<span class="c0"><h2>Move</h2>
 </span>
 </p>
 <p class="c1">
@@ -363,6 +376,7 @@
 </span>
 </p>
 <p class="c1">
+<div class="json">
 <span class="c0">{
 </span>
 </p>
@@ -381,6 +395,7 @@
 <p class="c1">
 <span class="c0">}
 </span>
+</div>
 </p>
 <p class="c1">
 <span class="c0">The server sends this move to all connected players. The reply is almost identical, but does also have a MoveTime field with the move time in the server&rsquo;s time zone.
