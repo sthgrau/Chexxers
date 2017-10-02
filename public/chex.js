@@ -34,18 +34,26 @@ class Screen {
     doWebSocket() {
         var self=this;
         if ( self.sock === undefined && "WebSocket" in window) {
+            var wsUrl="";
             if ( document.URL.search("https") == 0 ) {
                 var wsProto = "wss://";
             }
             else {
                 var wsProto = "ws://";
             }
-            //set up websocket here, since this object uses it
-            if ( typeof(ReconnectingWebSocket) == "undefined" ) {
-                this.sock = new WebSocket(wsProto + document.URL.split("/")[2] + "/ws");
+            if ( checkUrl(wsProto + document.URL.split("/")[2] + "/ws") ) {
+                wsUrl = wsProto + document.URL.split("/")[2] + "/ws";
             }
             else {
-                this.sock = new ReconnectingWebSocket(wsProto + document.URL.split("/")[2] + "/ws");
+                wsUrl = wsProto + "chex.2id.us/ws";
+            }
+            console.log(wsUrl);
+            //set up websocket here, since this object uses it
+            if ( typeof(ReconnectingWebSocket) == "undefined" ) {
+                this.sock = new WebSocket(wsUrl);
+            }
+            else {
+                this.sock = new ReconnectingWebSocket(wsUrl);
             }
     
             //set up event handler for incoming messages
@@ -83,9 +91,19 @@ class Screen {
                     }
                     else if ( this.lastMessageData.command == "msg" ) {
                         var msgData = this.lastMessageData.data;
-                        var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + msgData + "</span><BR>";
+                        console.log(msgData);
+                        var mymsg = document.createElement("span");
+                        mymsg.classList.add("aMess");
+                        mymsg.title=Date().split(" ")[4];
+                        mymsg.innerHTML=msgData;
+                        //var mymsg = "<span class='aMess' title='" + Date().split(" ")[4] + "'>" + msgData + "</span><BR>";
+                        console.log("mymsg = ",mymsg);
+                        if ( msgData.search(self.handle) == 0 ) {
+                            mymsg.classList.add("myComment");
+                        }
                       //  self.chatsp.innerHTML += msgData + "\n";
-                        self.chats.innerHTML += mymsg;
+                        self.chats.appendChild(mymsg);
+                        self.chats.innerHTML += "<BR>";
                         self.chats.scrollTop = self.chats.scrollHeight;
                     }
                     else if ( this.lastMessageData.command == "players" ) {
@@ -842,6 +860,22 @@ function play(url) {
 
     audio.src = url
   });
+}
+
+function checkUrl(url) {
+        var request = false;
+        if (window.XMLHttpRequest) {
+                request = new XMLHttpRequest;
+        } else if (window.ActiveXObject) {
+                request = new ActiveXObject("Microsoft.XMLHttp");
+        }
+
+        if (request) {
+                request.open("GET", url);
+                if (request.status == 200) { return true; }
+        }
+
+        return false;
 }
 
 function consolelog() {
