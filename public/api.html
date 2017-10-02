@@ -1,0 +1,394 @@
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="content-type">
+<style type="text/css">ol{margin:0;padding:0}table td,table th{padding:0}.c0{color:#000000;font-weight:400;text-decoration:none;vertical-align:baseline;font-size:11pt;font-family:"Arial";font-style:normal}.c1{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:left}.c3{background-color:#ffffff;max-width:468pt;padding:72pt 72pt 72pt 72pt}.c2{height:11pt}.title{padding-top:0pt;color:#000000;font-size:26pt;padding-bottom:3pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}.subtitle{padding-top:0pt;color:#666666;font-size:15pt;padding-bottom:16pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}li{color:#000000;font-size:11pt;font-family:"Arial"}p{margin:0;color:#000000;font-size:11pt;font-family:"Arial"}h1{padding-top:20pt;color:#000000;font-size:20pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h2{padding-top:18pt;color:#000000;font-size:16pt;padding-bottom:6pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h3{padding-top:16pt;color:#434343;font-size:14pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h4{padding-top:14pt;color:#666666;font-size:12pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h5{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:left}h6{padding-top:12pt;color:#666666;font-size:11pt;padding-bottom:4pt;font-family:"Arial";line-height:1.15;page-break-after:avoid;font-style:italic;orphans:2;widows:2;text-align:left}
+</style>
+</head>
+<body class="c3">
+<p class="c1">
+<span class="c0">This document describes the client server communication API for the Chexxers game.
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">The app currently relies on websockets, passing JSON messages between the server and relevant clients.
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">There is a single format for messages, with a JSON payload dependent on the command given. Below is a sample client message to the server. This is the first message sent from a client to the server for an unspecified game, as the client does not know anything.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;register&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;gameid&quot;:&quot;&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">command: Must contain a string for any communication. This value determines the structure the data must have.
+</span>
+</p>
+<p class="c1">
+<span class="c0">data: Optionally blank depending on the circumstance. Can be either a stringified JSON object or a simple string.
+</span>
+</p>
+<p class="c1">
+<span class="c0">gameid: Optionally blank depending on the circumstance. A string used to connect players into separate games
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">Commands:
+</span>
+</p>
+<p class="c1">
+<span class="c0">Register
+</span>
+</p>
+<p class="c1">
+<span class="c0">The register command is used to initialize a client, and to connect to a new or existing game. For a new client, no data is sent. A gameid may be sent in the case where the new client is connecting to a known game.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;register&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;gameid&quot;:&quot;&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">The reply from the server will contain a gameid and the player information in the data field. The important pieces of information are the handle, gameid and gameplace. The handle will be the public facing name that other people see. It is randomly generated from a list of adjectives, colors and animals.
+</span>
+</p>
+<p class="c1">
+<span class="c0">The gameplace is used to determine who controls which side. Places 0 and 1 are game players, greater than 1 act as spectators.
+</span>
+</p>
+<p class="c1">
+<span class="c0">Note: the gameid in this case is the same as the randomly generated player id. This is done to quick start a player while giving them some level of control over whether or not to engage in an interactive game.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">command: &quot;register&quot;, 
+</span>
+</p>
+<p class="c1">
+<span class="c0">data: &quot;{\&quot;Id\&quot;:\&quot;58fdf7f1-6c2b-4695-a5dd-677762264962\&quot;,\&quot; GameId\&quot;:\&quot;58fdf7f1-6c2b-4695-a5dd-677762264962\&quot;,&quot;Handle&quot;:\&quot;SillyBlondHornet\&quot;,\&quot;GamePlace\&quot;:0,\&quot;Socket\&quot;:{}}&quot;, 
+</span>
+</p>
+<p class="c1">
+<span class="c0">gameid: &quot;58fdf7f1-6c2b-4695-a5dd-677762264962&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">When switching games using a current session, the handle may be sent as a stringified JSON object to maintain your identity. This may also happen if the websocket is interrupted for any reason, and you are reconnecting to the same game.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;register&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;{\&quot;handle\&quot;:\&quot;SillyBlondHornet\&quot;}&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;gameid&quot;:&quot;58fdf7f1-6c2b-4695-a5dd-677762264962&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">After the register, the server sends out a separate move message to draw the board. It will also send a players message to update the clients with an updated players list.
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">Games
+</span>
+</p>
+<p class="c1">
+<span class="c0">The games command is used to get or send a list of recent games with players attached, aka active games. The message to send needs no additional information.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;games&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;gameid&quot;:&quot;&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">The reply message will have a stringified JSON array of game data.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;games&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;[{\&quot;_id\&quot;:\&quot;59d16a57e83c47f8a0e2e963\&quot;,\&quot;currmoveindex\&quot;:3,\&quot;gameid\&quot;:\&quot;58fdf7f1-6c2b-4695-a5dd-677762264962\&quot;,\&quot;playercount\&quot;:1}]&rdquo;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &ldquo;gameid&rdquo;:&rdquo;&rdquo;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">Players
+</span>
+</p>
+<p class="c1">
+<span class="c0">The players command is only sent by the server. It is to update the clients of the player information for the current game.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;players&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&rdquo;[{Id: \&quot;58fdf7f1-6c2b-4695-a5dd-677762264962\&quot;, GameId: \&quot;58fdf7f1-6c2b-4695-a5dd-677762264962\&quot;, Handle: \&quot;SillyBlondHornet\&quot;, GamePlace: 0, Socket: {}}]&rdquo;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&ldquo;gameid&rdquo;:&rdquo;58fdf7f1-6c2b-4695-a5dd-677762264962&rdquo;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">Msg
+</span>
+</p>
+<p class="c1">
+<span class="c0">The msg command is used to send messages to the current game players. This is used to facilitate communication in game.
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;msg&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;This message will show up as SillyBlondHornet said: This message will show up as &hellip;&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;gameid&quot;:&quot;58fdf7f1-6c2b-4695-a5dd-677762264962&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">Messages from other players will appear the same way. Gameid is required as it is used to determine who to send messages to.
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">BackForWard
+</span>
+</p>
+<p class="c1">
+<span class="c0">The backForWard command is used to go back and forward in the stack of existing moves. The data is a string signed integer to represent the direction and magnitude of the move.
+</span>
+</p>
+<p class="c1">
+<span class="c0">-2: go to beginning of game
+</span>
+</p>
+<p class="c1">
+<span class="c0">-1: go back one move
+</span>
+</p>
+<p class="c1">
+<span class="c0">1: go forward one move
+</span>
+</p>
+<p class="c1">
+<span class="c0">2: go to last known move
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;command&quot;:&quot;backForWard&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;data&quot;:&quot;-1&quot;,
+</span>
+</p>
+<p class="c1">
+<span class="c0">&quot;gameid&quot;:&quot;58fdf7f1-6c2b-4695-a5dd-677762264962&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">The server replies with a move command for clients to redraw the board.
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">Move
+</span>
+</p>
+<p class="c1">
+<span class="c0">The move command is the largest and most common message. The data field is a stringified JSON object consisting of a move index, for which move this is, and an array of all game pieces. Each game piece is &nbsp;described by three coordinates (x,y and z) for the two board coordinates plus how high in the stack the piece is. The piece also has a head attribute to show the pieces is heads(0) or tails(1) up. A player id for the owner of the piece, a flag for whether the piece is a royal piece. A moved flag to keep track of whether the piece has moved yet, for castling purposes. The square is a unique id for each piece (0-31).
+</span>
+</p>
+<p class="c1">
+<span class="c0">There is a record for each of the 32 pieces for each move. This is done to make it easier to go back and forth in the move list.
+</span>
+</p>
+<p class="c1">
+<span class="c0">&nbsp;
+</span>
+</p>
+<p class="c1">
+<span class="c0">{
+</span>
+</p>
+<p class="c1">
+<span class="c0">command: &quot;move&quot;, 
+</span>
+</p>
+<p class="c1">
+<span class="c0">data: &quot;{\&quot;moveindex\&quot;:4,\&quot;pieces\&quot;:[{\&quot;y\&rdquo;:0,\&rdquo;x\&rdquo;:2,\&rdquo;z\&rdquo;:2,\&rdquo;head\&rdquo;:0,\&rdquo;player\&rdquo;:0,\&rdquo;royal\&rdquo;:0,\&rdquo;Moved\&rdquo;:0,\&rdquo;square\&rdquo;:0},&hellip;]}&quot;, 
+</span>
+</p>
+<p class="c1">
+<span class="c0">gameid: &quot;58fdf7f1-6c2b-4695-a5dd-677762264962&quot;
+</span>
+</p>
+<p class="c1">
+<span class="c0">}
+</span>
+</p>
+<p class="c1">
+<span class="c0">The server sends this move to all connected players. The reply is almost identical, but does also have a MoveTime field with the move time in the server&rsquo;s time zone.
+</span>
+</p>
+<p class="c1 c2">
+<span class="c0">
+</span>
+</p>
+</body>
+</html>
